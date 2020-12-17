@@ -26,6 +26,55 @@ const readFile = fileName => {
     return JSON.parse(fileAsString)
 }
 
+//GET products/sun
+router.get("/sumTwoPrices", async (req, res, next) => {
+        const products = await readFile("products.json")
+        const selectedProduct1 = products.filter(
+            product => product._id === req.query.id1)
+         const selectedProduct2 = products.filter(
+            product => product._id === req.query.id2)
+         //const val1 = selectedProduct1.price
+         //const val2 = selectedProduct2.price
+         
+        try {
+    const { selectedProduct1, selectedProduct2 } = req.query
+
+    const xmlBody = begin()
+      .ele("soap:Envelope", {
+        "xmlns:soap": "http://schemas.xmlsoap.org/soap/envelope/",
+      })
+      .ele("soap:Body")
+      .ele("AllLowercaseWithToken", {
+        xmlns: "http://www.dataaccess.com/webservicesserver/",
+      })
+      .ele("sAString")
+      .text(string)
+      .up()
+      .ele("sToken")
+      .text(token)
+      .end()
+
+    const response = await axios({
+      method: "post",
+      url:
+        "https://www.dataaccess.com/webservicesserver/TextCasing.wso?op=AllLowercaseWithToken",
+      data: xmlBody,
+      headers: { "Content-type": "text/xml" },
+    })
+    const xml = response.data
+    const parsedJS = await asyncParser(xml)
+    res.send(
+      parsedJS["soap:Envelope"]["soap:Body"][0][
+        "m:AllLowercaseWithTokenResponse"
+      ][0]["m:AllLowercaseWithTokenResult"][0]
+    )
+  } catch (error) {
+    next(error)
+  }
+})
+
+
+
 //GET:id
 router.get("/:id", async (req, res, next) => {
     try {
